@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "node --watch src/index.js",
+    "build": "echo 'no build step needed — plain JS backend'",
     "start": "node src/index.js"
   },
   "dependencies": {

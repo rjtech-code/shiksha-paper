@@ -109,6 +109,49 @@ npm start         # serves dist/ AND the API from one process (backend/src/index
 - Files are stored in MongoDB via GridFS in ~16MB chunks — fine well beyond typical
   PDF sizes; the 100MB per-file cap (`backend/src/routes/history.js`) is the only limit.
 
+## Deploying to Vercel
+
+A single `vercel.json` at the project root deploys the whole app — frontend and
+backend — as **one Vercel project**: the Vite build is served as static files, and
+`backend/src/index.js` (the whole Express app, unmodified) runs as one serverless
+function, with `/api/*` routed to it. No separate backend deployment, no CORS
+headaches — same domain for both.
+
+1. Push this repo, then "Import Project" on [vercel.com](https://vercel.com) (or `vercel` CLI from the root).
+2. In the Vercel project's **Settings → Environment Variables**, set:
+   - `MONGODB_URI` — a MongoDB reachable from the internet (Vercel can't reach your
+     `127.0.0.1`; use [MongoDB Atlas](https://www.mongodb.com/atlas)'s free tier or similar).
+   - `JWT_SECRET` — any long random string.
+   - `FRONTEND_ORIGIN` — your Vercel deployment's URL once you know it (e.g.
+     `https://sikshapaper.vercel.app`), so the API accepts requests from it. You can
+     redeploy after setting this if you set it late.
+   (`backend/src/env.js` skips its local-only `.env` auto-creation on Vercel — these
+   three come from Vercel's dashboard instead.)
+
+### Deploying the backend separately (Render, Railway, etc.)
+
+For a persistent-server host instead of serverless, point it at the **`backend`**
+folder as the root/service directory:
+- Build command: `npm install` (there's an `npm run build` script too — it's a
+  no-op, some hosts require one to exist even if unused)
+- Start command: `npm start`
+- Environment variables: same three as above (`MONGODB_URI`, `JWT_SECRET`,
+  `FRONTEND_ORIGIN` — set the last one to wherever the frontend is deployed).
+  The host's own `PORT` env var is picked up automatically.
+
+Deploy the frontend separately as a static site (root folder, build command
+`npm run build`, output directory `dist`). Since it's now on a different domain than
+the backend, set a build-time env var so it knows where to send API calls:
+- `VITE_API_BASE=https://<your-backend-host>` (e.g. `https://sikshapaper-api.onrender.com`)
+  — leave it unset for same-origin deploys (local dev, or the combined single-Vercel-project setup above).
+
+Then point the backend's `FRONTEND_ORIGIN` at wherever this frontend ends up.
+3. Deploy. Vercel builds the frontend (`npm run build` → `dist/`) and the API function together.
+
+Note: Vercel serverless functions cap request body size (a few MB on the Hobby plan) —
+very large PDF uploads to History may fail there even though the tools themselves
+(which never leave the browser) are unaffected; raise this on a paid plan if needed.
+
 ## Automated tests
 
 `scratch-tests/` has Playwright scripts exercising every tool (guest mode) and the

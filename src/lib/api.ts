@@ -1,6 +1,12 @@
 // Thin client for the SikshaPaper backend (backend/) — auth + per-user file history.
 const TOKEN_KEY = 'sikshapaper_token'
 
+// Empty by default: same-origin, relative "/api/..." calls (local dev via the Vite
+// proxy, or the combined single-Vercel-project deploy). Set VITE_API_BASE at build
+// time (e.g. "https://sikshapaper-api.onrender.com") when the frontend and backend
+// are deployed to two different hosts/domains.
+const API_BASE = (import.meta.env.VITE_API_BASE ?? '').replace(/\/$/, '')
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
 }
@@ -47,7 +53,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
-  const res = await fetch(`/api${path}`, { ...options, headers })
+  const res = await fetch(`${API_BASE}/api${path}`, { ...options, headers })
   if (!res.ok) {
     let message = `Request failed (${res.status})`
     try {
@@ -83,7 +89,7 @@ export const api = {
     const token = getToken()
     const headers = new Headers()
     if (token) headers.set('Authorization', `Bearer ${token}`)
-    const res = await fetch(`/api/history/${item.id}/download`, { headers })
+    const res = await fetch(`${API_BASE}/api/history/${item.id}/download`, { headers })
     if (!res.ok) throw new ApiError('Could not download this file', res.status)
     return res.blob()
   },
