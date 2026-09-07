@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand palette — pink + blue, SikshaPaper */
+  --color-brand-pink-50: #fff0f6;
+  --color-brand-pink-100: #ffdcea;
+  --color-brand-pink-200: #ffb8d6;
+  --color-brand-pink-300: #ff8ab9;
+  --color-brand-pink-400: #ff5b9d;
+  --color-brand-pink-500: #f92e82;
+  --color-brand-pink-600: #e0116d;
+  --color-brand-pink-700: #b80d59;
+  --color-brand-pink-800: #920a46;
+  --color-brand-pink-900: #700837;
+
+  --color-brand-blue-50: #eef6ff;
+  --color-brand-blue-100: #dbebff;
+  --color-brand-blue-200: #b3d7ff;
+  --color-brand-blue-300: #7fbaff;
+  --color-brand-blue-400: #4796ff;
+  --color-brand-blue-500: #1c74f2;
+  --color-brand-blue-600: #0f59d1;
+  --color-brand-blue-700: #0e46a8;
+  --color-brand-blue-800: #113c85;
+  --color-brand-blue-900: #12346a;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.4s ease-out both;
+  --animate-shimmer: shimmer 2.2s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-gradient-to-b from-brand-blue-50 via-white to-brand-pink-50 text-slate-800 antialiased;
+}
+
+::selection {
+  @apply bg-brand-pink-200 text-brand-pink-900;
+}
+
+/* scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-pink-300) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: linear-gradient(var(--color-brand-pink-400), var(--color-brand-blue-400)); border-radius: 8px; }
+
+.brand-gradient {
+  background-image: linear-gradient(90deg, var(--color-brand-pink-500), var(--color-brand-blue-500));
+}
+
+.brand-gradient-text {
+  background-image: linear-gradient(90deg, var(--color-brand-pink-500), var(--color-brand-blue-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.card-hover {
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px -12px rgba(233, 30, 99, .25);
+}
+
+.dropzone {
+  @apply border-2 border-dashed border-brand-blue-300 bg-white/70 rounded-2xl transition-colors;
+}
+.dropzone.dragging {
+  @apply border-brand-pink-500 bg-brand-pink-50;
+}
