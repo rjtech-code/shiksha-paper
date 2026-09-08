@@ -4,7 +4,9 @@ const TOKEN_KEY = 'sikshapaper_token'
 // Empty by default: same-origin, relative "/api/..." calls (local dev via the Vite
 // proxy, or the combined single-Vercel-project deploy). Set VITE_API_BASE at build
 // time (e.g. "https://sikshapaper-api.onrender.com") when the frontend and backend
-// are deployed to two different hosts/domains.
+// are deployed to two different hosts/domains — this is the FRONTEND's own env var
+// (see .env.example at the project root), separate from backend/.env's FRONTEND_ORIGIN
+// (that one instead tells the *backend* which frontend URL to accept requests from).
 const API_BASE = (import.meta.env.VITE_API_BASE ?? '').replace(/\/$/, '')
 
 export function getToken(): string | null {

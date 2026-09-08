@@ -127,30 +127,35 @@ headaches — same domain for both.
      redeploy after setting this if you set it late.
    (`backend/src/env.js` skips its local-only `.env` auto-creation on Vercel — these
    three come from Vercel's dashboard instead.)
-
-### Deploying the backend separately (Render, Railway, etc.)
-
-For a persistent-server host instead of serverless, point it at the **`backend`**
-folder as the root/service directory:
-- Build command: `npm install` (there's an `npm run build` script too — it's a
-  no-op, some hosts require one to exist even if unused)
-- Start command: `npm start`
-- Environment variables: same three as above (`MONGODB_URI`, `JWT_SECRET`,
-  `FRONTEND_ORIGIN` — set the last one to wherever the frontend is deployed).
-  The host's own `PORT` env var is picked up automatically.
-
-Deploy the frontend separately as a static site (root folder, build command
-`npm run build`, output directory `dist`). Since it's now on a different domain than
-the backend, set a build-time env var so it knows where to send API calls:
-- `VITE_API_BASE=https://<your-backend-host>` (e.g. `https://sikshapaper-api.onrender.com`)
-  — leave it unset for same-origin deploys (local dev, or the combined single-Vercel-project setup above).
-
-Then point the backend's `FRONTEND_ORIGIN` at wherever this frontend ends up.
 3. Deploy. Vercel builds the frontend (`npm run build` → `dist/`) and the API function together.
 
 Note: Vercel serverless functions cap request body size (a few MB on the Hobby plan) —
 very large PDF uploads to History may fail there even though the tools themselves
 (which never leave the browser) are unaffected; raise this on a paid plan if needed.
+
+### Deploying frontend & backend separately (e.g. Vercel + Render)
+
+Two *different* env vars point at each other — set each on the host that needs it,
+not the other one (see `.env.example` at the project root, and `backend/.env.example`):
+
+- **Backend** (e.g. Render — see below) needs `FRONTEND_ORIGIN` = the frontend's URL,
+  so it knows which origin to accept browser requests from (CORS).
+- **Frontend** needs `VITE_API_BASE` = the backend's URL, so it knows where to actually
+  send its `/api/...` calls — set this in whatever host serves the frontend (e.g.
+  Vercel project → Settings → Environment Variables), as a *build-time* var (Vite
+  bakes it into the build, so redeploy after changing it). Leave it unset when frontend
+  and backend share one domain (local dev, or the combined single-Vercel-project setup above).
+
+**Backend on Render (or Railway, etc.)** — a persistent-server host instead of
+serverless — point it at the **`backend`** folder as the root/service directory:
+- Build command: `npm install` (there's an `npm run build` script too — it's a
+  no-op, some hosts require one to exist even if unused)
+- Start command: `npm start`
+- Environment variables: `MONGODB_URI`, `JWT_SECRET`, `FRONTEND_ORIGIN` (see above).
+  The host's own `PORT` env var is picked up automatically.
+
+**Frontend as a static site** — root folder, build command `npm run build`, output
+directory `dist`, env var `VITE_API_BASE` (see above).
 
 ## Automated tests
 
