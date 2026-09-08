@@ -3,7 +3,7 @@ import express from 'express'
 import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { users, history } from './db.js'
+import { users, history, connectDB } from './db.js'
 import authRoutes from './routes/auth.js'
 import historyRoutes from './routes/history.js'
 import adminRoutes from './routes/admin.js'
@@ -36,7 +36,17 @@ app.use((req, res, next) => {
 })
 app.use(express.json({ limit: '2mb' }))
 
-app.get('/api/health', (_req, res) => res.json({ ok: true }))
+// The HTTP server binds and starts listening (see the bottom of this file) whether or
+// not MongoDB has finished connecting — so hosts see an open port immediately instead of
+// timing out a deploy while MongoDB is briefly unreachable. Every /api/* route except
+// /health is gated behind this flag until connectDB() below resolves.
+let dbReady = false
+app.get('/api/health', (_req, res) => res.json({ ok: true, dbReady }))
+app.use('/api', (_req, res, next) => {
+  if (!dbReady) return res.status(503).json({ error: 'Still connecting to the database — try again in a moment' })
+  next()
+})
+
 app.use('/api/auth', authRoutes(users))
 app.use('/api/history', historyRoutes(users, history))
 app.use('/api/admin', adminRoutes(users, history))
@@ -56,11 +66,21 @@ app.use((err, _req, res, _next) => {
 
 // On Vercel, this file is imported as a serverless function handler (see the root
 // vercel.json) — Vercel calls the exported app directly per-request, it never runs
-// app.listen() itself. Locally (and on any other host), listen normally.
+// app.listen() itself. Locally (and on any other host), listen normally — right away,
+// not waiting on MongoDB (see dbReady above).
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`SikshaPaper backend listening on http://localhost:${PORT}`)
   })
 }
+
+connectDB()
+  .then(() => {
+    dbReady = true
+    console.log('MongoDB ready — API routes are now serving requests')
+  })
+  .catch((err) => {
+    console.error('Could not connect to MongoDB:', err.message)
+  })
 
 export default app
